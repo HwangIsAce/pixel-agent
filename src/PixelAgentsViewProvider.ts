@@ -83,12 +83,22 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
 		} else if (message.type === 'focusAgent') {
 			const agent = this.agents.get(message.id as number);
 			if (agent) {
-				agent.terminalRef.show();
+				agent.terminalRef?.show();
 			}
 		} else if (message.type === 'closeAgent') {
 			const agent = this.agents.get(message.id as number);
 			if (agent) {
-				agent.terminalRef.dispose();
+				if (agent.terminalRef) {
+					agent.terminalRef.dispose(); // triggers onDidCloseTerminal → removeAgent
+				} else {
+					// Orphan agent — no terminal, remove directly
+					removeAgent(
+						message.id as number, this.agents,
+						this.fileWatchers, this.pollingTimers, this.waitingTimers, this.permissionTimers,
+						this.jsonlPollTimers, this.persistAgents,
+					);
+					this.postToAll({ type: 'agentClosed', id: message.id as number });
+				}
 			}
 		} else if (message.type === 'saveAgentSeats') {
 			console.log(`[Pixel Agents] saveAgentSeats:`, JSON.stringify(message.seats));

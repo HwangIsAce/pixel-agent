@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import type { AgentState, WebviewPost } from './types.js';
 import { cancelWaitingTimer, cancelPermissionTimer, clearAgentActivity } from './timerManager.js';
 import { processTranscriptLine } from './transcriptParser.js';
-import { FILE_WATCHER_POLL_INTERVAL_MS, PROJECT_SCAN_INTERVAL_MS } from './constants.js';
+import { FILE_WATCHER_POLL_INTERVAL_MS, PROJECT_SCAN_INTERVAL_MS, JSONL_RECENT_ACTIVE_MS } from './constants.js';
 
 export function startFileWatching(
 	agentId: number,
@@ -92,12 +92,28 @@ export function ensureProjectScan(
 	persistAgents: () => void,
 ): void {
 	if (projectScanTimerRef.current) return;
-	// Seed with all existing JSONL files so we only react to truly new ones
+
+	// Seed known files and detect recently-active IDE sessions
 	try {
 		const files = fs.readdirSync(projectDir)
 			.filter(f => f.endsWith('.jsonl'))
 			.map(f => path.join(projectDir, f));
+		const now = Date.now();
 		for (const f of files) {
+			// Check if this file is already tracked by any agent
+			let alreadyTracked = false;
+			for (const agent of agents.values()) {
+				if (agent.jsonlFile === f) { alreadyTracked = true; break; }
+			}
+			if (!alreadyTracked) {
+				try {
+					const stat = fs.statSync(f);
+					if (now - stat.mtimeMs <= JSONL_RECENT_ACTIVE_MS) {
+						// Recently-active, untracked file → orphan agent (IDE session)
+						createOrphanAgent(f, projectDir, stat.size, nextAgentIdRef, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, webview);
+					}
+				} catch { /* ignore stat errors */ }
+			}
 			knownJsonlFiles.add(f);
 		}
 	} catch { /* dir may not exist yet */ }
@@ -161,10 +177,53 @@ function scanForNewJsonlFiles(
 							webview, persistAgents,
 						);
 					}
+				} else {
+					// No active terminal → create orphan agent for IDE session
+					try {
+						const stat = fs.statSync(file);
+						createOrphanAgent(file, projectDir, stat.size, nextAgentIdRef, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, webview);
+					} catch { /* ignore stat errors */ }
 				}
 			}
 		}
 	}
+}
+
+function createOrphanAgent(
+	jsonlFile: string,
+	projectDir: string,
+	fileSize: number,
+	nextAgentIdRef: { current: number },
+	agents: Map<number, AgentState>,
+	fileWatchers: Map<number, fs.FSWatcher>,
+	pollingTimers: Map<number, ReturnType<typeof setInterval>>,
+	waitingTimers: Map<number, ReturnType<typeof setTimeout>>,
+	permissionTimers: Map<number, ReturnType<typeof setTimeout>>,
+	webview: WebviewPost | undefined,
+): void {
+	const id = nextAgentIdRef.current++;
+	const agent: AgentState = {
+		id,
+		// terminalRef intentionally omitted — orphan agent (IDE session)
+		projectDir,
+		jsonlFile,
+		fileOffset: fileSize, // Start from end — only watch new activity
+		lineBuffer: '',
+		activeToolIds: new Set(),
+		activeToolStatuses: new Map(),
+		activeToolNames: new Map(),
+		activeSubagentToolIds: new Map(),
+		activeSubagentToolNames: new Map(),
+		isWaiting: false,
+		permissionSent: false,
+		hadToolsInTurn: false,
+	};
+
+	agents.set(id, agent);
+	console.log(`[Pixel Agents] Agent ${id}: created orphan for ${path.basename(jsonlFile)}`);
+	webview?.postMessage({ type: 'agentCreated', id });
+	startFileWatching(id, jsonlFile, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, webview);
+	// Note: orphan agents are NOT persisted (no persistAgents call)
 }
 
 function adoptTerminalForFile(

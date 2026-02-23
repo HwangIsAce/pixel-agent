@@ -5,7 +5,7 @@ export type WebviewPost = { postMessage(msg: unknown): void };
 
 export interface AgentState {
 	id: number;
-	terminalRef: vscode.Terminal;
+	terminalRef?: vscode.Terminal; // undefined for IDE (orphan) agents
 	projectDir: string;
 	jsonlFile: string;
 	fileOffset: number;

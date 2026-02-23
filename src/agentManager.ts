@@ -11,7 +11,7 @@ import { migrateAndLoadLayout } from './layoutPersistence.js';
 export function getProjectDirPath(cwd?: string): string | null {
 	const workspacePath = cwd || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 	if (!workspacePath) return null;
-	const dirName = workspacePath.replace(/[:\\/]/g, '-');
+	const dirName = workspacePath.replace(/[^a-zA-Z0-9]/g, '-');
 	return path.join(os.homedir(), '.claude', 'projects', dirName);
 }
 
@@ -137,6 +137,7 @@ export function persistAgents(
 ): void {
 	const persisted: PersistedAgent[] = [];
 	for (const agent of agents.values()) {
+		if (!agent.terminalRef) continue; // Skip orphan agents (no terminal)
 		persisted.push({
 			id: agent.id,
 			terminalName: agent.terminalRef.name,
