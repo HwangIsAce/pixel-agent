@@ -19,3 +19,9 @@ esbuild.js
 **/.vscode-test.*
 CLAUDE.md
 **/*.jsonl
+.venv/
+.python-version
+main.py
+pyproject.toml
+uv.lock
+CONTRIBUTORS.md
