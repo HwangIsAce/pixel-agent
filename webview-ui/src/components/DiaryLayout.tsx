@@ -1,4 +1,11 @@
+import { useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
+
+export interface DiaryLayoutProps {
+  children: ReactNode
+  /** Lines to show in the 일촌평 log area (oldest first). */
+  logLines?: string[]
+}
 
 const diaryRootStyle: React.CSSProperties = {
   width: '100%',
@@ -161,7 +168,17 @@ const navBtnStyle: React.CSSProperties = {
 
 const NAV_ITEMS = ['프로필', '다이어리', '쥬크박스', '사진첩', '게시판', '동영상', '방명록'] as const
 
-export function DiaryLayout({ children }: { children: ReactNode }) {
+export function DiaryLayout({ children, logLines = [] }: DiaryLayoutProps) {
+  const hasLogs = logLines.length > 0
+  const logContent = hasLogs ? logLines.join('\n') : '(에이전트 동작 시 로그가 여기에 표시됩니다)'
+  const ilchonLogRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (logLines.length > 0 && ilchonLogRef.current) {
+      ilchonLogRef.current.scrollTop = ilchonLogRef.current.scrollHeight
+    }
+  }, [logLines.length])
+
   return (
     <div style={diaryRootStyle}>
       <div style={diaryBorderStyle}>
@@ -214,8 +231,8 @@ export function DiaryLayout({ children }: { children: ReactNode }) {
           </div>
           <div style={ilchonSectionStyle}>
             <div style={ilchonTitleStyle}>일촌평 — Claude 로그</div>
-            <div id="ilchon-log" style={ilchonLogStyle}>
-              (에이전트 동작 시 로그가 여기에 표시됩니다)
+            <div id="ilchon-log" ref={ilchonLogRef} style={ilchonLogStyle}>
+              {logContent}
             </div>
           </div>
         </div>

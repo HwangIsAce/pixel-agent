@@ -221,6 +221,7 @@ function createOrphanAgent(
 
 	agents.set(id, agent);
 	console.log(`[Pixel Agents] Agent ${id}: created orphan for ${path.basename(jsonlFile)}`);
+	webview?.postMessage({ type: 'agentLog', id, text: `[에이전트 ${id}] 연결됨 (오프너)` });
 	webview?.postMessage({ type: 'agentCreated', id });
 	startFileWatching(id, jsonlFile, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, webview);
 	// Note: orphan agents are NOT persisted (no persistAgents call)
@@ -263,6 +264,7 @@ function adoptTerminalForFile(
 	persistAgents();
 
 	console.log(`[Pixel Agents] Agent ${id}: adopted terminal "${terminal.name}" for ${path.basename(jsonlFile)}`);
+	webview?.postMessage({ type: 'agentLog', id, text: `[에이전트 ${id}] 터미널 채택됨` });
 	webview?.postMessage({ type: 'agentCreated', id });
 
 	startFileWatching(id, jsonlFile, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, webview);

@@ -74,6 +74,7 @@ export function launchNewTerminal(
 	activeAgentIdRef.current = id;
 	persistAgents();
 	console.log(`[Pixel Agents] Agent ${id}: created for terminal ${terminal.name}`);
+	webview?.postMessage({ type: 'agentLog', id, text: `[에이전트 ${id}] 생성됨` });
 	webview?.postMessage({ type: 'agentCreated', id });
 
 	ensureProjectScan(
@@ -196,6 +197,7 @@ export function restoreAgents(
 		agents.set(p.id, agent);
 		knownJsonlFiles.add(p.jsonlFile);
 		console.log(`[Pixel Agents] Restored agent ${p.id} → terminal "${p.terminalName}"`);
+		webview?.postMessage({ type: 'agentLog', id: p.id, text: `[에이전트 ${p.id}] 복원됨` });
 
 		if (p.id > maxId) maxId = p.id;
 		// Extract terminal index from name like "Claude Code #3"

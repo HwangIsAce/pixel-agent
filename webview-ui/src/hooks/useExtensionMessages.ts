@@ -9,6 +9,7 @@ import { setWallSprites } from '../office/wallTiles.js'
 import { setCharacterTemplates } from '../office/sprites/spriteData.js'
 import { vscode } from '../vscodeApi.js'
 import { playDoneSound, setSoundEnabled } from '../notificationSound.js'
+import { ILCHON_LOG_MAX_LINES } from '../constants.js'
 
 export interface SubagentCharacter {
   id: number
@@ -44,6 +45,7 @@ export interface ExtensionMessageState {
   subagentCharacters: SubagentCharacter[]
   layoutReady: boolean
   loadedAssets?: { catalog: FurnitureAsset[]; sprites: Record<string, string[][]> }
+  ilchonLogLines: string[]
 }
 
 function saveAgentSeats(os: OfficeState): void {
@@ -68,6 +70,7 @@ export function useExtensionMessages(
   const [subagentCharacters, setSubagentCharacters] = useState<SubagentCharacter[]>([])
   const [layoutReady, setLayoutReady] = useState(false)
   const [loadedAssets, setLoadedAssets] = useState<{ catalog: FurnitureAsset[]; sprites: Record<string, string[][]> } | undefined>()
+  const [ilchonLogLines, setIlchonLogLines] = useState<string[]>([])
 
   // Track whether initial layout has been loaded (ref to avoid re-render)
   const layoutReadyRef = useRef(false)
@@ -341,6 +344,16 @@ export function useExtensionMessages(
         } catch (err) {
           console.error(`❌ Webview: Error processing furnitureAssetsLoaded:`, err)
         }
+      } else if (msg.type === 'agentLog') {
+        const text = typeof msg.text === 'string' ? msg.text : String(msg.text ?? '')
+        if (!text) return
+        const ts = new Date()
+        const timeStr = `${ts.getHours().toString().padStart(2, '0')}:${ts.getMinutes().toString().padStart(2, '0')}:${ts.getSeconds().toString().padStart(2, '0')}`
+        setIlchonLogLines((prev) => {
+          const next = [...prev, `[${timeStr}] ${text}`]
+          if (next.length > ILCHON_LOG_MAX_LINES) return next.slice(-ILCHON_LOG_MAX_LINES)
+          return next
+        })
       }
     }
     window.addEventListener('message', handler)
@@ -348,5 +361,5 @@ export function useExtensionMessages(
     return () => window.removeEventListener('message', handler)
   }, [getOfficeState])
 
-  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets }
+  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, ilchonLogLines }
 }

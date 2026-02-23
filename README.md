@@ -7,18 +7,19 @@ Each Claude Code terminal you open spawns a character that walks around, sits at
 This is the source code for the free [Pixel Agents extension for VS Code](https://marketplace.visualstudio.com/items?itemName=pablodelucca.pixel-agents) — you can install it directly from the marketplace with the full furniture catalog included.
 
 
-![Pixel Agents screenshot](webview-ui/public/Screenshot.jpg)
+![Pixel Agents](webview-ui/public/example.gif)
 
 ## Features
 
 - **One agent, one character** — every Claude Code terminal gets its own animated character
 - **Live activity tracking** — characters animate based on what the agent is actually doing (writing, reading, running commands)
+- **Diary-style UI** — Cyworld-inspired frame: profile area, pixel office view, and an **일촌평 (activity log)** panel where agent events stream in real time (tool use, turn status, sub-tasks)
 - **Office layout editor** — design your office with floors, walls, and furniture using a built-in editor
 - **Speech bubbles** — visual indicators when an agent is waiting for input or needs permission
 - **Sound notifications** — optional chime when an agent finishes its turn
 - **Sub-agent visualization** — Task tool sub-agents spawn as separate characters linked to their parent
 - **Persistent layouts** — your office design is saved and shared across VS Code windows
-- **Diverse characters** — 6 diverse characters.
+- **Diverse characters** — 6 diverse characters
 
 <p align="center">
   <img src="webview-ui/public/characters.png" alt="Pixel Agents characters" width="320" height="72" style="image-rendering: pixelated;">
@@ -47,11 +48,11 @@ Then press **F5** in VS Code to launch the Extension Development Host.
 
 ### Usage
 
-1. Open the **Pixel Agents** panel (it appears in the bottom panel area alongside your terminal)
-2. Click **+ Agent** to spawn a new Claude Code terminal and its character
-3. Start coding with Claude — watch the character react in real time
-4. Click a character to select it, then click a seat to reassign it
-5. Click **Layout** to open the office editor and customize your space
+1. Open the **Pixel Agents** panel (bottom panel, alongside the terminal). You’ll see the diary-style view: pixel office on the right and **일촌평 — Claude 로그** below it.
+2. Click **+ Agent** to spawn a new Claude Code terminal and its character. Agent events (creation, tool use, turn end) appear in the log area.
+3. Start coding with Claude — watch the character react in real time and the log update.
+4. Click a character to select it, then click a seat to reassign it.
+5. Click **Layout** to open the office editor and customize your space.
 
 ## Layout Editor
 
@@ -81,7 +82,7 @@ The extension will still work without the tileset — you'll get the default cha
 
 ## How It Works
 
-Pixel Agents watches Claude Code's JSONL transcript files to track what each agent is doing. When an agent uses a tool (like writing a file or running a command), the extension detects it and updates the character's animation accordingly. No modifications to Claude Code are needed — it's purely observational.
+Pixel Agents watches Claude Code's JSONL transcript files to track what each agent is doing. When an agent uses a tool (like writing a file or running a command), the extension detects it and updates the character's animation accordingly. The same events are sent to the **일촌평** log panel so you can read a chronological feed of agent activity. No modifications to Claude Code are needed — it's purely observational.
 
 The webview runs a lightweight game loop with canvas rendering, BFS pathfinding, and a character state machine (idle → walk → type/read). Everything is pixel-perfect at integer zoom levels.
 
@@ -94,7 +95,7 @@ The webview runs a lightweight game loop with canvas rendering, BFS pathfinding,
 
 - **Agent-terminal sync** — the way agents are connected to Claude Code terminal instances is not super robust and sometimes desyncs, especially when terminals are rapidly opened/closed or restored across sessions.
 - **Heuristic-based status detection** — Claude Code's JSONL transcript format does not provide clear signals for when an agent is waiting for user input or when it has finished its turn. The current detection is based on heuristics (idle timers, turn-duration events) and often misfires — agents may briefly show the wrong status or miss transitions.
-- **Windows-only testing** — the extension has only been tested on Windows 11. It may work on macOS or Linux, but there could be unexpected issues with file watching, paths, or terminal behavior on those platforms.
+- **Cross-platform** — the extension is developed and tested on Windows and macOS. Behavior on Linux may differ (file watching, paths, or terminal handling).
 
 ## Roadmap
 
