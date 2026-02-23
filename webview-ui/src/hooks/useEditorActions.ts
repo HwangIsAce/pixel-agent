@@ -7,9 +7,8 @@ import type { OfficeLayout, EditTool as EditToolType, TileType as TileTypeVal, F
 import { paintTile, placeFurniture, removeFurniture, moveFurniture, rotateFurniture, toggleFurnitureState, canPlaceFurniture, getWallPlacementRow, expandLayout } from '../office/editor/editorActions.js'
 import type { ExpandDirection } from '../office/editor/editorActions.js'
 import { getCatalogEntry, getRotatedType, getToggledType } from '../office/layout/furnitureCatalog.js'
-import { defaultZoom } from '../office/toolUtils.js'
 import { vscode } from '../vscodeApi.js'
-import { LAYOUT_SAVE_DEBOUNCE_MS, ZOOM_MIN, ZOOM_MAX } from '../constants.js'
+import { LAYOUT_SAVE_DEBOUNCE_MS, ZOOM_MIN, ZOOM_MAX, ZOOM_DEFAULT } from '../constants.js'
 
 export interface EditorActions {
   isEditMode: boolean
@@ -48,7 +47,7 @@ export function useEditorActions(
   const [isEditMode, setIsEditMode] = useState(false)
   const [editorTick, setEditorTick] = useState(0)
   const [isDirty, setIsDirty] = useState(false)
-  const [zoom, setZoom] = useState(defaultZoom)
+  const [zoom, setZoom] = useState(ZOOM_DEFAULT)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const panRef = useRef({ x: 0, y: 0 })
   const lastSavedLayoutRef = useRef<OfficeLayout | null>(null)

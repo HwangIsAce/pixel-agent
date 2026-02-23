@@ -346,5 +346,11 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
 		return `${attr}="${webviewUri}"`;
 	});
 
+	const profileImageUri = webview.asWebviewUri(
+		vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'assets', 'left-profile.png'),
+	).toString();
+	const injectScript = `<script>window.__PROFILE_IMAGE_URI__=${JSON.stringify(profileImageUri)};</script>`;
+	html = html.replace('</head>', `${injectScript}</head>`);
+
 	return html;
 }
