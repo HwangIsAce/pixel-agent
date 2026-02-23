@@ -1,5 +1,8 @@
 import type * as vscode from 'vscode';
 
+/** Can post messages to webview(s). Used for broadcast (panel + editor tabs). */
+export type WebviewPost = { postMessage(msg: unknown): void };
+
 export interface AgentState {
 	id: number;
 	terminalRef: vscode.Terminal;

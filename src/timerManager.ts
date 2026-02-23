@@ -1,12 +1,12 @@
 import type * as vscode from 'vscode';
-import type { AgentState } from './types.js';
+import type { AgentState, WebviewPost } from './types.js';
 import { PERMISSION_TIMER_DELAY_MS } from './constants.js';
 
 export function clearAgentActivity(
 	agent: AgentState | undefined,
 	agentId: number,
 	permissionTimers: Map<number, ReturnType<typeof setTimeout>>,
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 ): void {
 	if (!agent) return;
 	agent.activeToolIds.clear();
@@ -37,7 +37,7 @@ export function startWaitingTimer(
 	delayMs: number,
 	agents: Map<number, AgentState>,
 	waitingTimers: Map<number, ReturnType<typeof setTimeout>>,
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 ): void {
 	cancelWaitingTimer(agentId, waitingTimers);
 	const timer = setTimeout(() => {
@@ -71,7 +71,7 @@ export function startPermissionTimer(
 	agents: Map<number, AgentState>,
 	permissionTimers: Map<number, ReturnType<typeof setTimeout>>,
 	permissionExemptTools: Set<string>,
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 ): void {
 	cancelPermissionTimer(agentId, permissionTimers);
 	const timer = setTimeout(() => {

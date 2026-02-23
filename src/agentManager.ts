@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import type { AgentState, PersistedAgent } from './types.js';
+import type { AgentState, PersistedAgent, WebviewPost } from './types.js';
 import { cancelWaitingTimer, cancelPermissionTimer } from './timerManager.js';
 import { startFileWatching, readNewLines, ensureProjectScan } from './fileWatcher.js';
 import { JSONL_POLL_INTERVAL_MS, TERMINAL_NAME_PREFIX, WORKSPACE_KEY_AGENTS, WORKSPACE_KEY_AGENT_SEATS } from './constants.js';
@@ -27,7 +27,7 @@ export function launchNewTerminal(
 	permissionTimers: Map<number, ReturnType<typeof setTimeout>>,
 	jsonlPollTimers: Map<number, ReturnType<typeof setInterval>>,
 	projectScanTimerRef: { current: ReturnType<typeof setInterval> | null },
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 	persistAgents: () => void,
 ): void {
 	const idx = nextTerminalIndexRef.current++;
@@ -160,7 +160,7 @@ export function restoreAgents(
 	jsonlPollTimers: Map<number, ReturnType<typeof setInterval>>,
 	projectScanTimerRef: { current: ReturnType<typeof setInterval> | null },
 	activeAgentIdRef: { current: number | null },
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 	doPersist: () => void,
 ): void {
 	const persisted = context.workspaceState.get<PersistedAgent[]>(WORKSPACE_KEY_AGENTS, []);
@@ -255,9 +255,9 @@ export function restoreAgents(
 export function sendExistingAgents(
 	agents: Map<number, AgentState>,
 	context: vscode.ExtensionContext,
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 ): void {
-	if (!webview) return;
+	if (!webview) { return; }
 	const agentIds: number[] = [];
 	for (const id of agents.keys()) {
 		agentIds.push(id);
@@ -279,9 +279,9 @@ export function sendExistingAgents(
 
 export function sendCurrentAgentStatuses(
 	agents: Map<number, AgentState>,
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 ): void {
-	if (!webview) return;
+	if (!webview) { return; }
 	for (const [agentId, agent] of agents) {
 		// Re-send active tools
 		for (const [toolId, status] of agent.activeToolStatuses) {
@@ -305,10 +305,10 @@ export function sendCurrentAgentStatuses(
 
 export function sendLayout(
 	context: vscode.ExtensionContext,
-	webview: vscode.Webview | undefined,
+	webview: WebviewPost | undefined,
 	defaultLayout?: Record<string, unknown> | null,
 ): void {
-	if (!webview) return;
+	if (!webview) { return; }
 	const layout = migrateAndLoadLayout(context, defaultLayout);
 	webview.postMessage({
 		type: 'layoutLoaded',
